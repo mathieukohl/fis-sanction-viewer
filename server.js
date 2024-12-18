@@ -15,7 +15,13 @@ app.get('/api/sanctions/:discipline/:season', async (req, res) => {
 
   try {
     const response = await axios.get(API_URL)
-    res.json(response.data)
+
+    // Sort by competition date and limit to 20 records
+    const sortedSanctions = response.data
+      .sort((a, b) => new Date(b.competitionSummary.date) - new Date(a.competitionSummary.date))
+      .slice(0, 20)
+
+    res.json(sortedSanctions)
   } catch (error) {
     console.error('Error fetching sanctions:', error.message)
     res.status(500).json({ error: 'Failed to fetch data from FIS API' })
