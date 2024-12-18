@@ -28,15 +28,13 @@
         />
       </div>
 
-      <!-- Loading Spinner -->
-      <q-spinner v-if="loading" color="primary" size="3em" />
-
       <!-- Error Message -->
       <q-banner v-if="errorMessage" class="bg-red text-white q-mb-md">
         {{ errorMessage }}
       </q-banner>
 
       <!-- Data Table -->
+      <q-spinner v-if="loading" color="primary" size="3em" />
       <q-table
         v-if="!loading && sanctions.length"
         :rows="sanctions"
@@ -139,8 +137,15 @@ const loadSanctions = async (filters = {}) => {
 
   try {
     sanctions.value = await fetchSanctions(filters)
-  } catch (errorMessage) {
-    errorMessage.value = 'Failed to load sanctions. Please try again later.'
+    if (!sanctions.value.length) {
+      errorMessage.value = 'No sanctions available for the selected filters.'
+    }
+  } catch (error) {
+    if (error.message.includes('Too many requests')) {
+      errorMessage.value = 'You are making too many requests. Please wait a moment and try again.'
+    } else {
+      errorMessage.value = 'Failed to load sanctions. Please try again later.'
+    }
   } finally {
     loading.value = false
   }
