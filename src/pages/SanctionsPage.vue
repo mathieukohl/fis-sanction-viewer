@@ -21,11 +21,9 @@
           dense
           style="width: 150px"
         />
-        <q-input v-model="athleteName" label="Search Athlete" outlined dense /><q-btn
-          label="Filter"
-          color="primary"
-          @click="applyFilters"
-        />
+        <q-input v-model="athleteName" label="Search Athlete" outlined dense />
+        <q-btn label="Search" color="primary" @click="applyFilters" />
+        <q-btn label="Clear" color="primary" @click="clearFilters" />
       </div>
 
       <!-- Error Message -->
@@ -166,6 +164,12 @@ const applyFilters = () => {
   }
 
   loadSanctions(filters)
+}
+
+const clearFilters = () => {
+  selectedDiscipline.value = null
+  selectedSeason.value = null
+  athleteName.value = ''
 }
 
 const pagination = ref({
