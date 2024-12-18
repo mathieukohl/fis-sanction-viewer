@@ -11,6 +11,7 @@
           label="Select Discipline"
           outlined
           dense
+          disable
         />
         <q-select
           v-model="selectedSeason"
@@ -18,8 +19,10 @@
           label="Select Season"
           outlined
           dense
+          style="width: 130px"
+          disable
         />
-        <q-btn color="primary" label="Load Results" @click="loadSanctions" />
+        <q-input v-model="athleteName" label="Search Athlete" outlined dense disable />
       </div>
 
       <!-- Loading Spinner -->
@@ -38,6 +41,7 @@
         row-key="id"
         flat
         bordered
+        v-model:pagination="pagination"
       />
       <div v-else-if="!loading" class="text-center text-grey">
         No sanctions available for the selected filters.
@@ -47,7 +51,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { fetchSanctions } from 'src/api/fisApi'
 
 // State
@@ -57,6 +61,7 @@ const loading = ref(false)
 
 const selectedDiscipline = ref({ label: 'Snowboard', value: 'SB' }) // Default: Snowboard
 const selectedSeason = ref('2024') // Default: 2024 season
+const athleteName = ref('')
 
 // Options for dropdowns
 const disciplineOptions = [
@@ -73,33 +78,43 @@ const columns = [
     name: 'athlete',
     label: 'Athlete',
     align: 'left',
-    field: (row) => `${row.athlete.firstName} ${row.athlete.lastName} (${row.athlete.nationCode})`,
-  },
-  { name: 'fisCode', label: 'FIS Code', align: 'center', field: (row) => row.athlete.fisCode },
-  { name: 'gender', label: 'Gender', align: 'center', field: (row) => row.athlete.gender },
-  {
-    name: 'year',
-    label: 'Year',
-    align: 'center',
-    field: (row) => row.competitionSummary.seasonCode,
+    field: (row) => `${row.firstName} ${row.lastName} (${row.athlete?.nationCode || 'N/A'})`,
   },
   {
-    name: 'competition',
-    label: 'Competition',
+    name: 'gender',
+    label: 'Gender',
     align: 'center',
+    field: (row) => row.competitionSummary?.genderCode || 'N/A',
+  },
+  {
+    name: 'birthYear',
+    label: 'BirthYear',
+    align: 'center',
+    field: (row) => row.athlete?.birthYear,
+  },
+  {
+    name: 'fisCode',
+    label: 'FIS Code',
+    align: 'center',
+    field: (row) => row.athlete?.fisCode || 'N/A',
+  },
+  {
+    name: 'location',
+    label: 'Location',
+    align: 'left',
     field: (row) => `${row.competitionSummary.place}, ${row.competitionSummary.placeNationCode}`,
-  },
-  {
-    name: 'category',
-    label: 'Category',
-    align: 'center',
-    field: (row) => row.competitionSummary.categoryCode,
   },
   {
     name: 'date',
     label: 'Date',
     align: 'center',
     field: (row) => new Date(row.competitionSummary.date).toLocaleDateString(),
+  },
+  {
+    name: 'category',
+    label: 'Category',
+    align: 'center',
+    field: (row) => row.competitionSummary.categoryCode,
   },
   {
     name: 'violation',
@@ -116,6 +131,7 @@ const columns = [
 ]
 
 // Fetch sanctions dynamically
+/*
 const loadSanctions = async () => {
   const discipline = selectedDiscipline.value
   console.log('discipline', discipline)
@@ -136,5 +152,28 @@ const loadSanctions = async () => {
   } finally {
     loading.value = false
   }
-}
+}*/
+
+// Load latest sanctions on page load
+onMounted(async () => {
+  errorMessage.value = ''
+  loading.value = true
+
+  try {
+    sanctions.value = await fetchSanctions()
+
+    if (!sanctions.value.length) {
+      errorMessage.value = 'No sanctions available.'
+    }
+  } catch (errorMessage) {
+    errorMessage.value = 'Failed to load sanctions. Please try again later.'
+  } finally {
+    loading.value = false
+  }
+})
+
+const pagination = ref({
+  page: 1,
+  rowsPerPage: 20, // Show 20 records per page
+})
 </script>
