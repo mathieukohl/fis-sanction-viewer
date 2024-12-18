@@ -11,7 +11,7 @@
           label="Select Discipline"
           outlined
           dense
-          disable
+          style="width: 160px"
         />
         <q-select
           v-model="selectedSeason"
@@ -19,10 +19,13 @@
           label="Select Season"
           outlined
           dense
-          style="width: 130px"
-          disable
+          style="width: 150px"
         />
-        <q-input v-model="athleteName" label="Search Athlete" outlined dense disable />
+        <q-input v-model="athleteName" label="Search Athlete" outlined dense /><q-btn
+          label="Filter"
+          color="primary"
+          @click="applyFilters"
+        />
       </div>
 
       <!-- Loading Spinner -->
@@ -59,8 +62,8 @@ const sanctions = ref([])
 const errorMessage = ref('')
 const loading = ref(false)
 
-const selectedDiscipline = ref({ label: 'Snowboard', value: 'SB' }) // Default: Snowboard
-const selectedSeason = ref('2024') // Default: 2024 season
+const selectedDiscipline = ref() // Default: Snowboard
+const selectedSeason = ref() // Default: 2024 season
 const athleteName = ref('')
 
 // Options for dropdowns
@@ -130,47 +133,35 @@ const columns = [
   },
 ]
 
-// Fetch sanctions dynamically
-/*
-const loadSanctions = async () => {
-  const discipline = selectedDiscipline.value
-  console.log('discipline', discipline)
-
-  const season = selectedSeason.value
-
-  errorMessage.value = ''
+const loadSanctions = async (filters = {}) => {
   loading.value = true
+  errorMessage.value = ''
 
   try {
-    sanctions.value = await fetchSanctions(discipline.value, season)
-
-    if (!sanctions.value.length) {
-      errorMessage.value = 'No results found for the selected filters.'
-    }
-  } catch (errorMessage) {
-    errorMessage.value = 'An error occurred while fetching sanctions.'
-  } finally {
-    loading.value = false
-  }
-}*/
-
-// Load latest sanctions on page load
-onMounted(async () => {
-  errorMessage.value = ''
-  loading.value = true
-
-  try {
-    sanctions.value = await fetchSanctions()
-
-    if (!sanctions.value.length) {
-      errorMessage.value = 'No sanctions available.'
-    }
+    sanctions.value = await fetchSanctions(filters)
   } catch (errorMessage) {
     errorMessage.value = 'Failed to load sanctions. Please try again later.'
   } finally {
     loading.value = false
   }
+}
+
+// Load latest sanctions on page load
+onMounted(() => {
+  loadSanctions() // Load 20 latest sanctions without filters
 })
+
+// Apply filters dynamically
+const applyFilters = () => {
+  const filterDiscipline = selectedDiscipline.value ? selectedDiscipline.value : null
+  const filters = {
+    discipline: filterDiscipline.value,
+    season: selectedSeason.value,
+    athleteName: athleteName.value.trim(),
+  }
+
+  loadSanctions(filters)
+}
 
 const pagination = ref({
   page: 1,

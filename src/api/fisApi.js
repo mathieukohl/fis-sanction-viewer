@@ -13,9 +13,9 @@ export const fetchSanctions = async (disciplineCode, seasonCode) => {
   }
 }*/
 
-export const fetchSanctions = async () => {
+export const fetchSanctions = async (params = {}) => {
   try {
-    const response = await axios.get('http://localhost:5001/api/sanctions')
+    const response = await axios.get('http://localhost:5001/api/sanctions', { params })
     console.log(response)
     return response.data
   } catch (error) {

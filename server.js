@@ -30,13 +30,14 @@ app.get('/api/sanctions/:discipline/:season', async (req, res) => {
 })*/
 
 app.get('/api/sanctions', async (req, res) => {
+  const { season, discipline, athleteName } = req.query
+
   const API_URLS = [
     'https://api.fis-ski.com/sanctions/SB/2024', // Snowboard
     'https://api.fis-ski.com/sanctions/FS/2024', // Freestyle Skiing
     'https://api.fis-ski.com/sanctions/CC/2024', // Cross-Country
     'https://api.fis-ski.com/sanctions/NK/2024', // Nordic Combined
   ]
-
   try {
     // Fetch all disciplines' data
     const promises = API_URLS.map((url) => axios.get(url))
@@ -47,6 +48,22 @@ app.get('/api/sanctions', async (req, res) => {
 
     // Filter only athletes
     sanctions = sanctions.filter((row) => row.function === 'athlete')
+
+    if (discipline) {
+      sanctions = sanctions.filter((row) => row.competitionSummary.disciplineCode === discipline)
+    }
+
+    if (season) {
+      sanctions = sanctions.filter(
+        (row) => row.competitionSummary.seasonCode === parseInt(season, 10),
+      )
+    }
+
+    if (athleteName) {
+      sanctions = sanctions.filter((row) =>
+        `${row.firstName} ${row.lastName}`.toLowerCase().includes(athleteName.toLowerCase()),
+      )
+    }
 
     // Sort by competition date (descending) and limit to 20 records
     sanctions = sanctions
