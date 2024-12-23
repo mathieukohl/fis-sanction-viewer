@@ -179,9 +179,10 @@ onMounted(() => {
 
 // Apply filters dynamically
 const applyFilters = () => {
-  const filterDiscipline = selectedDiscipline.value ? selectedDiscipline.value : null
+  const disciplineObj = selectedDiscipline.value
+  const filterDiscipline = disciplineObj ? disciplineObj.value : null
   const filters = {
-    discipline: filterDiscipline.value,
+    discipline: filterDiscipline,
     season: selectedSeason.value,
     athleteName: athleteName.value.trim(),
   }
