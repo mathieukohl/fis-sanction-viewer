@@ -17,18 +17,35 @@ app.get('/api/sanctions', async (req, res) => {
     'https://api.fis-ski.com/sanctions/CC/2024', // Cross-Country
     'https://api.fis-ski.com/sanctions/NK/2024', // Nordic Combined
   ]
+
   try {
     // Fetch all disciplines' data
     const promises = API_URLS.map((url) => axios.get(url))
-    const responses = await Promise.all(promises)
+    const responses = await Promise.allSettled(promises)
 
-    // Combine all data into a single array
-    let sanctions = responses
-      .filter((response) => response.status === 200)
-      .flatMap((response) => response.data)
+    // Log rate limit information
+    responses.forEach((response, index) => {
+      if (response.status === 'fulfilled') {
+        const headers = response.value.headers
+        console.log(
+          `API ${API_URLS[index]}: Limit=${headers['x-ratelimit-limit']}, Remaining=${headers['x-ratelimit-remaining']}`,
+        )
+      }
+    })
+
+    // Filter out failed requests
+    const fulfilledResponses = responses
+      .filter((response) => response.status === 'fulfilled' && response.value.status === 200)
+      .map((response) => response.value)
+
+    let sanctions = fulfilledResponses.flatMap((response) => response.data)
 
     // Handle rate limit gracefully
-    const rateLimitExceeded = responses.some((response) => response.status === 429)
+    const rateLimitExceeded = responses.some(
+      (response) =>
+        response.status === 'rejected' ||
+        (response.status === 'fulfilled' && response.value.status === 429),
+    )
     if (rateLimitExceeded) {
       res
         .status(429)
