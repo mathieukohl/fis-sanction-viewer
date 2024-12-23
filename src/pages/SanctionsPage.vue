@@ -58,7 +58,7 @@ const sanctions = ref([])
 const errorMessage = ref('')
 const loading = ref(false)
 
-const selectedDiscipline = ref() // Default: Snowboard
+const selectedDiscipline = ref()
 const selectedSeason = ref() // Default: 2024 season
 const athleteName = ref('')
 
@@ -78,6 +78,12 @@ const columns = [
     label: 'Athlete',
     align: 'left',
     field: (row) => `${row.firstName} ${row.lastName} (${row.athlete?.nationCode || 'N/A'})`,
+  },
+  {
+    name: 'discipline',
+    label: 'Discipline',
+    align: 'center',
+    field: (row) => row.competitionSummary?.disciplineCode || 'N/A',
   },
   {
     name: 'gender',
@@ -129,20 +135,37 @@ const columns = [
   },
 ]
 
+const cachedSanctionsKey = 'sanctionsData' // Key for localStorage
+
 const loadSanctions = async (filters = {}) => {
   loading.value = true
   errorMessage.value = ''
 
+  const filtersKey = JSON.stringify(filters)
+
+  // Check localStorage for cached data
+  const cachedData = localStorage.getItem(`${cachedSanctionsKey}-${filtersKey}`)
+  if (cachedData) {
+    sanctions.value = JSON.parse(cachedData)
+    loading.value = false
+    return
+  }
+  console.log('cachedData', cachedData)
+
   try {
     sanctions.value = await fetchSanctions(filters)
+    console.log('sanctions', sanctions.value)
     if (!sanctions.value.length) {
       errorMessage.value = 'No sanctions available for the selected filters.'
+    } else {
+      // Cache data in localStorage
+      localStorage.setItem(`${cachedSanctionsKey}-${filtersKey}`, JSON.stringify(sanctions.value))
     }
   } catch (error) {
     if (error.message.includes('Too many requests')) {
       errorMessage.value = 'You are making too many requests. Please wait a moment and try again.'
     } else {
-      errorMessage.value = 'Failed to load sanctions. Please try again later.'
+      errorMessage.value = 'You are making too many requests. Please wait a moment and try again.'
     }
   } finally {
     loading.value = false
@@ -162,7 +185,7 @@ const applyFilters = () => {
     season: selectedSeason.value,
     athleteName: athleteName.value.trim(),
   }
-
+  console.log('Applying filters:', filters)
   loadSanctions(filters)
 }
 
@@ -170,6 +193,7 @@ const clearFilters = () => {
   selectedDiscipline.value = null
   selectedSeason.value = null
   athleteName.value = ''
+  loadSanctions()
 }
 
 const pagination = ref({
