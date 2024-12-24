@@ -54,8 +54,8 @@ const sanctions = ref([])
 const errorMessage = ref('')
 const loading = ref(false)
 
-const selectedDiscipline = ref()
-const selectedSeason = ref() // Default: 2024 season
+const selectedDiscipline = ref('ALL')
+const selectedSeason = ref('2025') // Default: 2025 season
 const athleteName = ref('')
 
 // Options for dropdowns
