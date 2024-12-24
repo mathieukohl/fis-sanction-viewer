@@ -1,20 +1,23 @@
 <template>
   <q-page padding>
     <div class="q-pa-md">
-      <!-- Filters -->
+      <!-- Filters Section -->
       <div class="q-mb-md row q-gutter-md">
+        <!-- Select a discipline -->
         <q-select
           v-model="selectedDiscipline"
           :options="disciplineOptions"
           label="Select Discipline"
           style="width: 160px"
         />
+        <!-- Select a season -->
         <q-select
           v-model="selectedSeason"
           :options="seasonOptions"
           label="Select Season"
           style="width: 150px"
         />
+        <!-- Search an athlete by name -->
         <q-input v-model="athleteName" label="Search Athlete" />
         <div class="q-pa-md q-gutter-sm">
           <q-btn label="Search" color="primary" @click="applyFilters" />
@@ -54,6 +57,7 @@ const sanctions = ref([])
 const errorMessage = ref('')
 const loading = ref(false)
 
+// Filter variables
 const selectedDiscipline = ref('ALL')
 const selectedSeason = ref('2025') // Default: 2025 season
 const athleteName = ref('')
@@ -133,6 +137,7 @@ const columns = [
 
 const cachedSanctionsKey = 'sanctionsData' // Key for localStorage
 
+// Fetch sanctions data from the backend
 const loadSanctions = async (filters = {}) => {
   loading.value = true
   errorMessage.value = ''
@@ -149,6 +154,7 @@ const loadSanctions = async (filters = {}) => {
   console.log('cachedData', cachedData)
 
   try {
+    // Fetch data from the API
     sanctions.value = await fetchSanctions(filters)
     console.log('sanctions', sanctions.value)
     if (!sanctions.value.length) {
@@ -169,13 +175,13 @@ const loadSanctions = async (filters = {}) => {
   }
 }
 
-// Load latest sanctions on page load
+// Load sanctions on page mount
 onMounted(() => {
   const filters = { discipline: 'SB,FS,CC,NK' } // Default load all disciplines
   loadSanctions(filters)
 })
 
-// Apply filters dynamically
+// Apply filters to fetch data dynamically
 const applyFilters = () => {
   const filters = {
     discipline: selectedDiscipline.value?.value || 'SB,FS,CC,NK', // Send all disciplines if none is selected
@@ -186,6 +192,7 @@ const applyFilters = () => {
   loadSanctions(filters)
 }
 
+// Clear all filters and reset
 const clearFilters = () => {
   selectedDiscipline.value = null
   selectedSeason.value = null
@@ -193,6 +200,7 @@ const clearFilters = () => {
   loadSanctions({ discipline: 'SB,FS,CC,NK' }) // Reset to all disciplines
 }
 
+// Pagination configuration for the table
 const pagination = ref({
   page: 1,
   rowsPerPage: 20, // Show 20 records per page
