@@ -1,29 +1,25 @@
 <template>
   <q-page padding>
     <div class="q-pa-md">
-      <h3 class="text-h5">FIS Sanctioned Athletes</h3>
-
       <!-- Filters -->
       <div class="q-mb-md row q-gutter-md">
         <q-select
           v-model="selectedDiscipline"
           :options="disciplineOptions"
           label="Select Discipline"
-          outlined
-          dense
           style="width: 160px"
         />
         <q-select
           v-model="selectedSeason"
           :options="seasonOptions"
           label="Select Season"
-          outlined
-          dense
           style="width: 150px"
         />
-        <q-input v-model="athleteName" label="Search Athlete" outlined dense />
-        <q-btn label="Search" color="primary" @click="applyFilters" />
-        <q-btn label="Clear" color="primary" @click="clearFilters" />
+        <q-input v-model="athleteName" label="Search Athlete" />
+        <div class="q-pa-md q-gutter-sm">
+          <q-btn label="Search" color="primary" @click="applyFilters" />
+          <q-btn label="Clear" color="primary" @click="clearFilters" />
+        </div>
       </div>
 
       <!-- Error Message -->
