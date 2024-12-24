@@ -69,7 +69,7 @@ const disciplineOptions = [
   { label: 'Freestyle Skiing', value: 'FS' },
   { label: 'Nordic Combined', value: 'NK' },
 ]
-const seasonOptions = ['2022', '2023', '2024']
+const seasonOptions = ['2022', '2023', '2024', '2025']
 
 // Columns for table
 const columns = [
@@ -162,10 +162,11 @@ const loadSanctions = async (filters = {}) => {
       localStorage.setItem(`${cachedSanctionsKey}-${filtersKey}`, JSON.stringify(sanctions.value))
     }
   } catch (error) {
-    if (error.message.includes('Too many requests')) {
+    if (error.message.includes('429')) {
       errorMessage.value = 'You are making too many requests. Please wait a moment and try again.'
     } else {
-      errorMessage.value = 'You are making too many requests. Please wait a moment and try again.'
+      errorMessage.value =
+        'Network error: Unable to connect. Please check your internet connection and try again.'
     }
   } finally {
     loading.value = false
@@ -174,15 +175,14 @@ const loadSanctions = async (filters = {}) => {
 
 // Load latest sanctions on page load
 onMounted(() => {
-  loadSanctions() // Load 20 latest sanctions without filters
+  const filters = { discipline: 'SB,FS,CC,NK' } // Default load all disciplines
+  loadSanctions(filters)
 })
 
 // Apply filters dynamically
 const applyFilters = () => {
-  const disciplineObj = selectedDiscipline.value
-  const filterDiscipline = disciplineObj ? disciplineObj.value : null
   const filters = {
-    discipline: filterDiscipline,
+    discipline: selectedDiscipline.value?.value || 'SB,FS,CC,NK', // Send all disciplines if none is selected
     season: selectedSeason.value,
     athleteName: athleteName.value.trim(),
   }
@@ -194,7 +194,7 @@ const clearFilters = () => {
   selectedDiscipline.value = null
   selectedSeason.value = null
   athleteName.value = ''
-  loadSanctions()
+  loadSanctions({ discipline: 'SB,FS,CC,NK' }) // Reset to all disciplines
 }
 
 const pagination = ref({

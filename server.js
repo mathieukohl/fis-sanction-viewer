@@ -11,34 +11,35 @@ app.use(cors())
 app.get('/api/sanctions', async (req, res) => {
   const { season, discipline, athleteName } = req.query
 
-  const API_URLS = [
-    'https://api.fis-ski.com/sanctions/SB/2024', // Snowboard
-    'https://api.fis-ski.com/sanctions/FS/2024', // Freestyle Skiing
-    'https://api.fis-ski.com/sanctions/CC/2024', // Cross-Country
-    'https://api.fis-ski.com/sanctions/NK/2024', // Nordic Combined
-  ]
+  // Default to all disciplines if none is provided
+  const disciplines = discipline ? discipline.split(',') : ['SB', 'FS', 'CC', 'NK']
 
   try {
-    // Fetch all disciplines' data
-    const promises = API_URLS.map((url) => axios.get(url))
-    const responses = await Promise.allSettled(promises)
+    // Build the requests based on the disciplines and season
+    const requests = disciplines.map((disciplineCode) => {
+      const url = season
+        ? `https://api.fis-ski.com/sanctions/${disciplineCode}/${season}`
+        : `https://api.fis-ski.com/sanctions/${disciplineCode}`
+      return axios.get(url)
+    })
+
+    // Fetch all sanctions concurrently
+    const responses = await Promise.allSettled(requests)
 
     // Log rate limit information
     responses.forEach((response, index) => {
       if (response.status === 'fulfilled') {
         const headers = response.value.headers
         console.log(
-          `API ${API_URLS[index]}: Limit=${headers['x-ratelimit-limit']}, Remaining=${headers['x-ratelimit-remaining']}`,
+          `API ${disciplines[index]}: Limit=${headers['x-ratelimit-limit']}, Remaining=${headers['x-ratelimit-remaining']}`,
         )
       }
     })
 
-    // Filter out failed requests
-    const fulfilledResponses = responses
+    // Combine data from successful responses
+    let sanctions = responses
       .filter((response) => response.status === 'fulfilled' && response.value.status === 200)
-      .map((response) => response.value)
-
-    let sanctions = fulfilledResponses.flatMap((response) => response.data)
+      .flatMap((response) => response.value.data)
 
     // Handle rate limit gracefully
     const rateLimitExceeded = responses.some(
@@ -55,16 +56,6 @@ app.get('/api/sanctions', async (req, res) => {
 
     // Filter only athletes
     sanctions = sanctions.filter((row) => row.function === 'athlete')
-
-    if (discipline) {
-      sanctions = sanctions.filter((row) => row.competitionSummary.disciplineCode === discipline)
-    }
-
-    if (season) {
-      sanctions = sanctions.filter(
-        (row) => row.competitionSummary.seasonCode === parseInt(season, 10),
-      )
-    }
 
     if (athleteName) {
       sanctions = sanctions.filter((row) =>
