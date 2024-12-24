@@ -69,7 +69,7 @@ const disciplineOptions = [
   { label: 'Freestyle Skiing', value: 'FS' },
   { label: 'Nordic Combined', value: 'NK' },
 ]
-const seasonOptions = ['2022', '2023', '2024', '2025']
+const seasonOptions = ['2025', '2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017']
 
 // Columns for table
 const columns = [
