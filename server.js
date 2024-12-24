@@ -58,8 +58,10 @@ app.get('/api/sanctions', async (req, res) => {
     sanctions = sanctions.filter((row) => row.function === 'athlete')
 
     if (athleteName) {
-      sanctions = sanctions.filter((row) =>
-        `${row.firstName} ${row.lastName}`.toLowerCase().startsWith(athleteName.toLowerCase()),
+      sanctions = sanctions.filter(
+        (row) =>
+          row.firstName.toLowerCase().startsWith(athleteName.toLowerCase()) ||
+          row.lastName.toLowerCase().startsWith(athleteName.toLowerCase()),
       )
     }
 
